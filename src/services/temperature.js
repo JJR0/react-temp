@@ -6,4 +6,14 @@ const getTemp = () => {
   return request.then(response => response.data)
 }
 
-export default { getTemp }
+const getTempDate = (date) => {
+  const request = axios.get(`${baseUrl}/${date}`)
+  return request.then(response => response.data)
+}
+
+const getTempNow = () => {
+  const request = axios.get(baseUrl+'/now')
+  return request.then(response => response.data)
+}
+
+export default { getTemp, getTempDate, getTempNow }
