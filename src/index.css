@@ -3,6 +3,28 @@ body {
   text-align: center;
 }
 
+#nav-bar {
+  width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  margin-top: 30px;
+}
+
+#nav-menu {
+  display: flex;
+  flex-direction: row;
+  width: 200px;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding-top: 0px;
+}
+
+#content {
+  width: 500px;
+  margin: 0 auto;
+}
+
 #temp-now-div {
   font-weight: bold;
   font-size: 18px;
@@ -12,8 +34,12 @@ body {
   margin: 0 auto;
   width: 500px;
   display: grid;
-  grid-template-columns: 150px 150px 200px;
-  grid-template-rows: 30px 30px;
+  grid-template-columns: 150px 150px 150px;
+  grid-template-rows: 20px 20px;
+}
+
+.info-item {
+  align-content: center;
 }
 
 .datepicker {
@@ -24,8 +50,37 @@ body {
   border-radius: 3px;
 }
 
+h4 {
+  margin-top: 20px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+}
+
 .tooltip-div {
   font-size: 16px;
   padding: 0;
   margin: 0;
+}
+
+#login-grid {
+  width: 600px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 130px 130px;
+  grid-template-rows: 20px 20px;
+  grid-gap: 5px;
+  justify-content: center;
+  justify-items: start;
+}
+
+input {
+  width: 130px;
+}
+
+#login-button {
+  margin-top: 10px;
+}
+
+#nav-menu > div:hover {
+  font-weight: bold;
 }
