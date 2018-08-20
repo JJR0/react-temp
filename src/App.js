@@ -96,13 +96,18 @@ class App extends Component {
       case 'login':
         this.setState({ showHome: false, showLogin: true, showSettings: false })
         return
+      case 'settings':
+        this.setState({ showHome: false, showLogin: false, showSettings: true })
+        return
       default:
         return
     }
   }
   
+  // Handles input field changes
   handleFieldChange = (e) => this.setState({ [e.target.name]: e.target.value })
   
+  // Tries to login, if not correct credentials error occurs
   login = async (event) => {
     event.preventDefault()
     try{
@@ -113,12 +118,19 @@ class App extends Component {
   
       this.setState({ username: '', password: '', user})
     } catch(exception) {
-      this.setState({
-        error: 'käyttäjätunnus tai salasana virheellinen',
+      console.log(exception)
+    }
+  }
+  
+  changeUpdateFreq = async (event) => {
+    event.preventDefault()
+    try {
+      await temperatureService.changeSettings({
+        updateFreq: this.state.updateFreq
       })
-      setTimeout(() => {
-        this.setState({ error: null })
-      }, 5000)
+      this.setState({ updateFreq: '' })
+    } catch (exception) {
+        console.log(exception)
     }
   }
 
@@ -191,7 +203,16 @@ class App extends Component {
     return (
       <div id='settings-div'>
         <h3>Asetukset</h3>
-
+        <form onSubmit={this.changeUpdateFreq}>
+          Lämpötiladatan päivitystiheys
+          <input
+            type='text'
+            name='updateFreq'
+            value={this.state.updateFreq}
+            onChange={this.state.handleFieldChange}
+            />
+          <button type='submit'>Tallenna</button>
+        </form>
       </div>
     )
   }
@@ -213,14 +234,14 @@ class App extends Component {
             animationDuration={0.5}
             />
 
-          {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} /> : null}
+          {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} /> : null}
         </div>
         
         {this.state.showHome ? this.homeScreen() : null }
         
         {this.state.showLogin ? this.loginScreen() : null }
         
-        {this.state.user ? this.settingsScreen() : null }
+        {this.state.showSettings ? this.settingsScreen() : null }
       </div>
     )
   }

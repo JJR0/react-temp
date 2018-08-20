@@ -16,4 +16,9 @@ const getTempNow = () => {
   return request.then(response => response.data)
 }
 
-export default { getTemp, getTempDate, getTempNow }
+const changeSettings = (updateFreq) => {
+  const request = axios.post(`${baseUrl}/${updateFreq}`)
+  return request.then(response => response.data)
+}
+
+export default { getTemp, getTempDate, getTempNow, changeSettings }
