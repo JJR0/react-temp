@@ -4,9 +4,12 @@ import DatePicker from 'react-datepicker'
 import LineChart from 'react-linechart'
 import HamburgerMenu from 'react-hamburger-menu'
 import temperatureService from './services/temperature'
+import loginService from './services/login'
 import '../node_modules/react-linechart/dist/styles.css'
 import '../node_modules/react-datepicker/dist/react-datepicker.css'
 import './index.css'
+import Loginform from './components/Loginform';
+import NavigationMenu from './components/Navigation';
 
 moment.locale('fi')
 
@@ -25,18 +28,20 @@ class App extends Component {
       showLogin: false,
       showSettings: false,
       username: '',
-      password: ''
+      password: '',
+      user: null,
+      updateFreq: null
     }
   }
   
   componentDidMount() {
-    temperatureService.getTempDate(this.formatDate(this.state.startDate)).then(data => {
+    temperatureService.getTempDate(this.state.startDate.format('DDMMYYYY')).then(data => {
       this.setState({
         data: data,
         lastHour: moment().hours() + '.00',
       }, () => {
-        const temps = this.getTemperatureOf(moment())
-        const lastTemp = temps[temps.length-1]
+        const todayTemps = this.getTempOf(moment().format('DDMMYYYY'))
+        const lastTemp = todayTemps[todayTemps.length-1]
         this.setState({ 
           dayAverage: this.calcDayAverage(),
           lastHourData: 0//lastTemp.y
@@ -53,19 +58,13 @@ class App extends Component {
   handleDateChange = (date) => {
     this.setState({
       startDate: date
+    }, () => {
+      temperatureService.getTempDate(this.state.startDate.format('DDMMYYYY')).then(data => {
+        this.setState({
+          data: data
+        })
+      })
     })
-  }
-  
-  // formats moments.js object date to locale 'fi' date 
-  formatDate = (date) => {
-    const date1 = date.date().toString()
-    const month = (date.month()+1).toString()
-    const year = date.year().toString()
-    if (date.month()+1 < 10) {
-      return date1 + "0" + month + year
-    } else {
-      return date1 + month + year
-    }
   }
   
   // Describes the html element, which is shown when hovered over data point in chart.
@@ -73,25 +72,19 @@ class App extends Component {
   
   // Calculates average temperature of the day according to data, which 
   // has been gathered up to that point of the day.
-  calcDayAverage = () => {
-    const temps = this.getTemperatureOf(moment())
-    const sum_temp = temps.reduce((a, b) => a + b.y, 0)
-    
-    //return sum_temp / moment().hours()
-    return Number(sum_temp / 5).toFixed(1)
-  }
+  calcDayAverage = () => (this.getTempOf(moment().format('DDMMYYYY')).reduce((a, b) => a + b.y, 0) / moment().hours()).toFixed(1)
   
   // Returns list of temperatures of the date (moment.js object)
   // If there are no temperature date on the date, empty array is returned
-  getTemperatureOf = (date) => {
-    if (this.state.data[0] === [] || typeof this.state.data[0] === 'undefined')
-      return []
+  getTempOf = (date) => {
+    if (this.state.data[0] === [] || typeof this.state.data[0] === 'undefined') return []
 
-    const date_obj = this.state.data.find(e => e.date === this.formatDate(date))
-    console.log('date_obj: ', date_obj)
+    const date_obj = this.state.data.find(e => e.date === date)
+    
     if (typeof date_obj !== 'undefined')
       return date_obj.temperatures
-    else return []
+    else
+      return []
   }
   
   // Handles which window is shown, when link has been clicked in navigation bar.
@@ -103,9 +96,6 @@ class App extends Component {
       case 'login':
         this.setState({ showHome: false, showLogin: true, showSettings: false })
         return
-      case 'settings':
-        this.setState({ showHome: false, showLogin: false, showSettings: true })
-        return
       default:
         return
     }
@@ -113,23 +103,27 @@ class App extends Component {
   
   handleFieldChange = (e) => this.setState({ [e.target.name]: e.target.value })
   
-  login = (event) => {
+  login = async (event) => {
     event.preventDefault()
-    console.log('kirjauduttu!')
-  }
+    try{
+      const user = await loginService.login({
+        username: this.state.username,
+        password: this.state.password
+      })
   
-  navigationMenu = () => {
-    return (
-      <div id='nav-menu'>
-        <div onClick={() => this.handleWindow('etusivu')}>Etusivu</div>
-        <div onClick={() => this.handleWindow('login')}>Kirjaudu</div>
-        <div onClick={() => this.handleWindow('settings')}>Asetukset</div>
-      </div>
-    )
+      this.setState({ username: '', password: '', user})
+    } catch(exception) {
+      this.setState({
+        error: 'käyttäjätunnus tai salasana virheellinen',
+      })
+      setTimeout(() => {
+        this.setState({ error: null })
+      }, 5000)
+    }
   }
 
   homeScreen = () => {
-    const tempToShow = this.getTemperatureOf(this.state.startDate)
+    const tempToShow = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
     
     return (
       <div id='content'>
@@ -183,27 +177,12 @@ class App extends Component {
     return (
       <div id='login-div'>
         <h3>Kirjautuminen</h3>
-        <form onSubmit={this.login}>
-          <div id='login-grid'>
-            <label id='username-label'>Käyttäjätunnus:</label>
-            <input
-              type='text'
-              name='username'
-              onChange={(event) => this.handleFieldChange(event)}
-              value={this.state.username}
-              autoComplete='off'
-              />
-            <label id='password-label'>Salasana:</label>
-            <input
-              type='password'
-              name='password'
-              onChange={(event) => this.handleFieldChange(event)}
-              value={this.state.password}
-              autoComplete='off'
-              />
-          </div>
-          <button id='login-button' type='submit'>Kirjaudu</button>
-        </form>
+        <Loginform
+          login={this.login}
+          handleFieldChange={this.handleFieldChange}
+          username={this.state.username}
+          password={this.state.password}
+        />
       </div>
     )
   }
@@ -212,9 +191,7 @@ class App extends Component {
     return (
       <div id='settings-div'>
         <h3>Asetukset</h3>
-        <div id='settings-grid'>
-          
-        </div>
+
       </div>
     )
   }
@@ -236,14 +213,14 @@ class App extends Component {
             animationDuration={0.5}
             />
 
-          {this.state.active ? this.navigationMenu() : null}
+          {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} /> : null}
         </div>
         
         {this.state.showHome ? this.homeScreen() : null }
         
         {this.state.showLogin ? this.loginScreen() : null }
         
-        {this.state.showSettings ? this.settingsScreen() : null }
+        {this.state.user ? this.settingsScreen() : null }
       </div>
     )
   }
