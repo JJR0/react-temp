@@ -8,8 +8,8 @@ import loginService from './services/login'
 import '../node_modules/react-linechart/dist/styles.css'
 import '../node_modules/react-datepicker/dist/react-datepicker.css'
 import './index.css'
-import Loginform from './components/Loginform';
-import NavigationMenu from './components/Navigation';
+import Loginform from './components/Loginform'
+import NavigationMenu from './components/Navigation'
 
 moment.locale('fi')
 
@@ -30,7 +30,7 @@ class App extends Component {
       username: '',
       password: '',
       user: null,
-      updateFreq: null
+      updateFreq: 0
     }
   }
   
@@ -52,6 +52,13 @@ class App extends Component {
     temperatureService.getTempNow().then(data => {
       this.setState({ temperatureNow: data })
     })
+
+    const loggedUserJSON = window.localStorage.getItem('loggedUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      this.setState({user})
+      temperatureService.setToken(user.token)
+    }
   }
   
   // Set state when date is change in datepicker
@@ -107,6 +114,8 @@ class App extends Component {
   // Handles input field changes
   handleFieldChange = (e) => this.setState({ [e.target.name]: e.target.value })
   
+  handleFreqChange = (e) => this.setState({ updateFreq: parseInt(e.target.value) })
+
   // Tries to login, if not correct credentials error occurs
   login = async (event) => {
     event.preventDefault()
@@ -116,19 +125,26 @@ class App extends Component {
         password: this.state.password
       })
   
-      this.setState({ username: '', password: '', user})
+      window.localStorage.setItem('loggedUser', JSON.stringify(user))
+      temperatureService.setToken(user.token)
+      this.setState({ username: '', password: '', user, showHome: true, showLogin: false})
     } catch(exception) {
       console.log(exception)
     }
+  }
+
+  logout = (event) => {
+    event.preventDefault()
+    
+    window.localStorage.removeItem('loggedUser')
+    this.setState({ user: null })
   }
   
   changeUpdateFreq = async (event) => {
     event.preventDefault()
     try {
-      await temperatureService.changeSettings({
-        updateFreq: this.state.updateFreq
-      })
-      this.setState({ updateFreq: '' })
+      const newValue = await temperatureService.changeSettings(5000)
+      
     } catch (exception) {
         console.log(exception)
     }
@@ -139,7 +155,7 @@ class App extends Component {
     
     return (
       <div id='content'>
-        <h2>Lämpötilaseuranta</h2>
+        <h3>Lämpötilaseuranta</h3>
         <div id='temp-now-div'>
           Lämpötila nyt: {this.state.temperatureNow} &#8451;
         </div>
@@ -204,12 +220,16 @@ class App extends Component {
       <div id='settings-div'>
         <h3>Asetukset</h3>
         <form onSubmit={this.changeUpdateFreq}>
-          Lämpötiladatan päivitystiheys
+          Lämpötiladatan päivitystiheys (sekunneissa):
+          <p/>
           <input
-            type='text'
+            id='freq-input'
+            type='number'
             name='updateFreq'
             value={this.state.updateFreq}
-            onChange={this.state.handleFieldChange}
+            onChange={this.handleFreqChange}
+            min='0'
+            max='99999'
             />
           <button type='submit'>Tallenna</button>
         </form>
@@ -220,6 +240,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
+        {this.state.user ? <div id='logged-div'>{this.state.user.username} on kirjautunut</div> : null}
         <div id='nav-bar'>
           <HamburgerMenu
             id='hamburger-menu'
@@ -234,7 +255,7 @@ class App extends Component {
             animationDuration={0.5}
             />
 
-          {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} /> : null}
+          {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} logout={this.logout} /> : null}
         </div>
         
         {this.state.showHome ? this.homeScreen() : null }
