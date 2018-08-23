@@ -1,6 +1,8 @@
 import axios from 'axios'
 const baseUrl = '/api/temperature'
 
+let token = null
+
 const getTemp = () => {
   const request = axios.get(baseUrl)
   return request.then(response => response.data)
@@ -16,4 +18,14 @@ const getTempNow = () => {
   return request.then(response => response.data)
 }
 
-export default { getTemp, getTempDate, getTempNow }
+const setToken = (newToken) => {
+  token = `bearer ${newToken}`
+}
+
+const changeSettings = async (newValue) => {
+  const response = await axios.post(baseUrl, newValue)
+  console.log(response.data)
+  return response.data
+}
+
+export default { getTemp, getTempDate, getTempNow, changeSettings, setToken }

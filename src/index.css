@@ -1,6 +1,89 @@
 body {
-  font-family: sans-serif;
+  font-family: 'Roboto', sans-serif;
   text-align: center;
+}
+
+#logged-div {
+  width: 500px;
+  text-align: right;
+  font-style: italic;
+  font-size: 12px;
+  margin: 0 auto;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+}
+
+#nav-bar {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  margin-top: 30px;
+  margin-bottom: 0px;
+  margin-left: 30px;
+  padding: 0px;
+}
+
+#nav-menu {
+  margin: 0 auto;
+  padding: 0;
+  width: 400px;
+}
+
+#nav-menu ul {
+  list-style: none;
+  text-align: center;
+}
+
+#nav-menu ul li {
+  display: inline-block;
+}
+
+#nav-menu ul li button {
+  display: block;
+  text-decoration: none;
+  color: black;
+  font-weight: 300;
+  text-transform: uppercase;
+  margin-right: 20px;
+}
+
+#nav-menu ul li button,
+#nav-menu ul li button:after,
+#nav-menu ul li button:before {
+  transition: all .5s;
+}
+
+#nav-menu ul li button {
+  position: relative;
+}
+
+#nav-menu ul li button:after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 0%;
+  content: '.';
+  color: transparent;
+  background: black;
+  height: 1px;
+}
+
+#nav-menu ul li button:hover:after {
+  width: 100%;
+}
+
+#nav-menu ul li button:hover {
+  color: #555;
+}
+
+#content {
+  width: 500px;
+  margin: 0 auto;
+  padding-top: 0px;
+  margin-top: 0px;
 }
 
 #temp-now-div {
@@ -12,8 +95,12 @@ body {
   margin: 0 auto;
   width: 500px;
   display: grid;
-  grid-template-columns: 150px 150px 200px;
-  grid-template-rows: 30px 30px;
+  grid-template-columns: 150px 150px 150px;
+  grid-template-rows: 20px 20px;
+}
+
+.info-item {
+  align-content: center;
 }
 
 .datepicker {
@@ -24,8 +111,44 @@ body {
   border-radius: 3px;
 }
 
+h4 {
+  margin-top: 20px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+}
+
 .tooltip-div {
   font-size: 16px;
   padding: 0;
   margin: 0;
+}
+
+#login-grid {
+  width: 600px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 130px 130px;
+  grid-template-rows: 20px 20px;
+  grid-gap: 5px;
+  justify-content: center;
+  justify-items: start;
+}
+
+input {
+  width: 130px;
+}
+
+#login-button {
+  margin-top: 10px;
+}
+
+#freq-input {
+  width: 100px;
+  margin-right: 10px;
+}
+
+h3 {
+  margin-top: 10px;
+  text-transform: uppercase;
+  font-weight: 550;
 }
