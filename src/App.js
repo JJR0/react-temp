@@ -10,6 +10,7 @@ import '../node_modules/react-datepicker/dist/react-datepicker.css'
 import './index.css'
 import Loginform from './components/Loginform'
 import NavigationMenu from './components/Navigation'
+import 'moment/locale/fi'
 
 moment.locale('fi')
 
@@ -21,6 +22,7 @@ class App extends Component {
       data: [],
       lastHour: 0,
       lastHourData: 0,
+      tempCount: 0,
       dayAverage: 0,
       temperatureNow: 0,
       active: false,
@@ -38,19 +40,21 @@ class App extends Component {
     temperatureService.getTempDate(this.state.startDate.format('DDMMYYYY')).then(data => {
       this.setState({
         data: data,
-        lastHour: moment().hours() + '.00',
       }, () => {
         const todayTemps = this.getTempOf(moment().format('DDMMYYYY'))
         const lastTemp = todayTemps[todayTemps.length-1]
         this.setState({ 
-          dayAverage: this.calcDayAverage(),
-          lastHourData: 0//lastTemp.y
+          lastHourData: lastTemp.y.toFixed(1),
+          lastHour: lastTemp.x,
+          tempCount: todayTemps.length
+        }, () => {
+          this.setState({ dayAverage: this.calcDayAverage() })
         })
       })
     })
 
     temperatureService.getTempNow().then(data => {
-      this.setState({ temperatureNow: data })
+      this.setState({ temperatureNow: data.toFixed(1) })
     })
 
     const loggedUserJSON = window.localStorage.getItem('loggedUser')
@@ -75,11 +79,14 @@ class App extends Component {
   }
   
   // Describes the html element, which is shown when hovered over data point in chart.
-  showTooltip = (point) => "<div className='tooltip-div'>" + point.y + " &#8451</div>"
+  showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
   
   // Calculates average temperature of the day according to data, which 
   // has been gathered up to that point of the day.
-  calcDayAverage = () => (this.getTempOf(moment().format('DDMMYYYY')).reduce((a, b) => a + b.y, 0) / moment().hours()).toFixed(1)
+  calcDayAverage = () => {
+    const sum = this.getTempOf(moment().format('DDMMYYYY')).reduce((a, b) => a + b.y, 0)
+    return ( sum / this.state.tempCount).toFixed(1)
+  }
   
   // Returns list of temperatures of the date (moment.js object)
   // If there are no temperature date on the date, empty array is returned
@@ -153,58 +160,44 @@ class App extends Component {
   homeScreen = () => {
     const tempToShow = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
     
-    return (
-      <div id='content'>
-        <h3>Lämpötilaseuranta</h3>
-        <div id='temp-now-div'>
-          Lämpötila nyt: {this.state.temperatureNow} &#8451;
-        </div>
-        <p/>
-        <div id='last-data-div'>
-          <div className='info-item'>Viimeisin lämpötila:</div>
-          <div className='info-item'>Päivän keskiarvo:</div>
-          <div className='info-item'>Tiedot päivittynyt:</div>
-          <div className='info-item'>{this.state.lastHourData} &#8451; </div>
-          <div className='info-item'>{this.state.dayAverage} &#8451;</div>
-          <div className='info-item'>klo: {this.state.lastHour}</div>
-        </div>
-        <p/>
+    return [
         <div id='day-selector'>
           Minkä päivän lämpötilatiedot haluat nähdä?
           <br/>
           <DatePicker
+            inline
             className='datepicker'
             selected={this.state.startDate}
             onChange={this.handleDateChange}
             dateFormat="DD.MM.YYYY"
+            locale="fi"
           />
-        </div>
+        </div>,
         <div id='line-chart'>
           <h4>Lämpötila tunti tunnilta</h4>
           <LineChart
             className='linechart'
-            width={500}
-            height={500}
+            width={400}
+            height={400}
             data={[ {color: 'steelblue', points: tempToShow} ]}
             xMin="0"
             xMax="24"
-            yMin="18"
-            yMax="28"
+            yMin="21"
+            yMax="27"
             xLabel="Tunnit"
             yLabel="Lämpötila (&#8451;)"
-            pointRadius="2"
+            pointRadius="1"
             onPointHover={(point) => this.showTooltip(point)}
-            ticks="24"
+            ticks="12"
           />
-        </div>
-      </div>
-    )
+        </div>,
+      ]
   }
   
   loginScreen = () => {
     return (
       <div id='login-div'>
-        <h3>Kirjautuminen</h3>
+        <h4>Kirjautuminen</h4>
         <Loginform
           login={this.login}
           handleFieldChange={this.handleFieldChange}
@@ -218,10 +211,10 @@ class App extends Component {
   settingsScreen = () => {
     return (
       <div id='settings-div'>
-        <h3>Asetukset</h3>
+        <h4>Asetukset</h4>
         <form onSubmit={this.changeUpdateFreq}>
           Lämpötiladatan päivitystiheys (sekunneissa):
-          <p/>
+          <br/>
           <input
             id='freq-input'
             type='number'
@@ -240,29 +233,56 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        {this.state.user ? <div id='logged-div'>{this.state.user.username} on kirjautunut</div> : null}
-        <div id='nav-bar'>
-          <HamburgerMenu
-            id='hamburger-menu'
-            isOpen={this.state.active}
-            menuClicked={() => this.setState({ active: !this.state.active })}
-            width={24}
-            height={18}
-            strokeWidth={2}
-            rotate={0}
-            color='black'
-            borderRadius={0}
-            animationDuration={0.5}
-            />
-
-          {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} logout={this.logout} /> : null}
+        <div className='header'>
+          <h2>Lämpötilaseuranta</h2>
+          <div id='temp-now-div'>
+            Lämpötila nyt <span id='temp-now'>{this.state.temperatureNow} &#8451;</span>
+          </div>
+          <div id='last-data-div'>
+            <div className='info-item'>Viimeisin lämpötila:</div>
+            <div className='info-item'>Päivän keskiarvo:</div>
+            <div className='info-item'>Tiedot päivittynyt:</div>
+            <div className='info-item'>{this.state.lastHourData} &#8451; </div>
+            <div className='info-item'>{this.state.dayAverage} &#8451;</div>
+            <div className='info-item'>klo: {this.state.lastHour}</div>
+          </div>
         </div>
-        
-        {this.state.showHome ? this.homeScreen() : null }
-        
-        {this.state.showLogin ? this.loginScreen() : null }
-        
-        {this.state.showSettings ? this.settingsScreen() : null }
+
+        <div className='navigation'>
+          <div className='nav-bar'>
+            <HamburgerMenu
+              id='hamburger-menu'
+              isOpen={this.state.active}
+              menuClicked={() => this.setState({ active: !this.state.active })}
+              width={24}
+              height={18}
+              strokeWidth={2}
+              rotate={0}
+              color='black'
+              borderRadius={0}
+              animationDuration={0.5}
+              />
+
+            {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} logout={this.logout} name="mobile-menu" /> : null}
+          </div>
+
+          <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} logout={this.logout} name="nav-menu" />
+        </div>
+
+
+
+
+        <div className='main'>
+          {this.state.showHome ? this.homeScreen() : null }
+          
+          {this.state.showLogin ? this.loginScreen() : null }
+          
+          {this.state.showSettings ? this.settingsScreen() : null }
+        </div>
+
+        <div className='footer'>
+          www.datalogger.xyz (c) 2018
+        </div>
       </div>
     )
   }

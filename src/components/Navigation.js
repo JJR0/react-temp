@@ -1,13 +1,13 @@
 import React from 'react'
 
-const NavigationMenu = ({ handleWindow, user, logout }) => {
+const NavigationMenu = ({ handleWindow, user, logout, name }) => {
   return (
-    <div id='nav-menu'>
+    <div id={name}>
       <ul>
-        <li><button onClick={() => handleWindow('etusivu')}>Etusivu</button></li>
-        { !user ? <li><button onClick={() => handleWindow('login')}>Kirjaudu</button></li> : null }
-        { user ? <li><button onClick={() => handleWindow('settings')}>Asetukset</button></li> : null }
-        { user ? <li><button onClick={logout}>Kirjaudu ulos</button></li> : null }
+        <li><span onClick={() => handleWindow('etusivu')}>Etusivu</span></li>
+        { !user ? <li><span onClick={() => handleWindow('settings')}>Asetukset</span></li> : null }
+        { !user ? <li><span onClick={() => handleWindow('login')}>Kirjaudu</span></li> : null }
+        { user ? <li><span onClick={logout}>Kirjaudu ulos</span></li> : null }
       </ul>
     </div>
   )
