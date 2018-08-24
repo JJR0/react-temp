@@ -1,6 +1,52 @@
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Yanone Kaffeesatz', sans-serif;
+  font-size: 18px;
   text-align: center;
+  padding: 0;
+  margin: 0;
+  background-color: #f9fbe7;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  width: 100%;
+  padding: 15px 0;
+  background-color: #f0f4c3;
+}
+
+.header h2 {
+  text-transform: uppercase;
+  font-weight: 550;
+  margin: 0;
+  padding: 0;
+  color: black;
+}
+
+.navigation {
+  width: 100%;
+  padding: 15px 0;
+  margin: 0;
+  background-color: #f0f4c3;
+}
+
+.main {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  background-color: #f0f4c3;
+  margin: 0;
+  padding: 10px 0;
 }
 
 #logged-div {
@@ -13,33 +59,66 @@ body {
   padding-bottom: 0px;
 }
 
-#nav-bar {
-  width: 100%;
-  margin: 0 auto;
+.nav-bar {
+  opacity: 0;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: row;
-  margin-top: 30px;
-  margin-bottom: 0px;
-  margin-left: 30px;
-  padding: 0px;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+
+@media (min-width: 0px) and (max-width: 768px) {
+  .nav-bar {
+    opacity: 1;
+    position: absolute;
+    left: 10px;
+    top: 50px;
+  }
+
+  #nav-menu {
+    opacity: 0;
+  }
+
+  #temp-now-div {
+    opacity: 0;
+  }
+
+  #last-data-div {
+    opacity: 0;
+  }
+
+}
+
+#hamburger-menu {
+  display: none;
 }
 
 #nav-menu {
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
-  width: 400px;
 }
 
+#mobile-menu {
+  margin: 0;
+  padding: 0;
+}
+
+#mobile-menu ul,
 #nav-menu ul {
   list-style: none;
   text-align: center;
+  margin: 0;
 }
 
+#mobile-menu ul li,
 #nav-menu ul li {
   display: inline-block;
 }
 
-#nav-menu ul li button {
+#mobile-menu ul li span,
+#nav-menu ul li span {
   display: block;
   text-decoration: none;
   color: black;
@@ -48,17 +127,17 @@ body {
   margin-right: 20px;
 }
 
-#nav-menu ul li button,
-#nav-menu ul li button:after,
-#nav-menu ul li button:before {
+#nav-menu ul li span,
+#nav-menu ul li span:after,
+#nav-menu ul li span:before {
   transition: all .5s;
 }
 
-#nav-menu ul li button {
+#nav-menu ul li span {
   position: relative;
 }
 
-#nav-menu ul li button:after {
+#nav-menu ul li span:after {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -71,32 +150,35 @@ body {
   height: 1px;
 }
 
-#nav-menu ul li button:hover:after {
+#nav-menu ul li span:hover:after {
   width: 100%;
 }
 
-#nav-menu ul li button:hover {
-  color: #555;
-}
-
-#content {
-  width: 500px;
-  margin: 0 auto;
-  padding-top: 0px;
-  margin-top: 0px;
+#nav-menu ul li span:hover {
+  color: black;
 }
 
 #temp-now-div {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  font-size: 1rem;
+}
+
+#temp-now {
   font-weight: bold;
-  font-size: 18px;
 }
 
 #last-data-div {
+  position: absolute;
+  left: 10px;
+  top: 40px;
   margin: 0 auto;
-  width: 500px;
+  margin-bottom: 20px;
   display: grid;
-  grid-template-columns: 150px 150px 150px;
+  grid-template-columns: 100px 100px 100px;
   grid-template-rows: 20px 20px;
+  font-size: 1rem;
 }
 
 .info-item {
@@ -104,8 +186,6 @@ body {
 }
 
 .datepicker {
-  font-size: 16px;
-  width: 100px;
   padding: 2px 5px;
   border: 1px solid steelblue;
   border-radius: 3px;
@@ -117,14 +197,21 @@ h4 {
   padding-top: 0px;
 }
 
-.tooltip-div {
-  font-size: 16px;
-  padding: 0;
+#login-div h4 {
   margin: 0;
+  padding: 0;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+#settings-div h4 {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
 #login-grid {
-  width: 600px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 130px 130px;
@@ -147,8 +234,3 @@ input {
   margin-right: 10px;
 }
 
-h3 {
-  margin-top: 10px;
-  text-transform: uppercase;
-  font-weight: 550;
-}
