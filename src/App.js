@@ -18,7 +18,6 @@ class App extends Component {
       data: [],
       lastHour: 0,
       lastHourData: 0,
-      tempCount: 0,
       dayAverage: 0,
       temperatureNow: 0,
       active: false,
@@ -33,14 +32,9 @@ class App extends Component {
       this.setState({
         data: data,
       }, () => {
-        const todayTemps = this.getTempOf(moment().format('DDMMYYYY'))
-        this.setState({ 
-          tempCount: todayTemps.length
-        }, () => {
-          this.setState({ dayAverage: this.calcDayAverage() })
-          this.setState({ min_temp: this.calcMin() })
-          this.setState({ max_temp: this.calcMax() })
-        })
+        this.setState({ dayAverage: this.calcDayAverage() })
+        this.setState({ min_temp: this.calcMin() })
+        this.setState({ max_temp: this.calcMax() })
       })
     })
 
@@ -57,6 +51,10 @@ class App extends Component {
       temperatureService.getTempDate(this.state.startDate.format('DDMMYYYY')).then(data => {
         this.setState({
           data: data
+        }, () => {
+          this.setState({ dayAverage: this.calcDayAverage() })
+          this.setState({ min_temp: this.calcMin() })
+          this.setState({ max_temp: this.calcMax() })
         })
       })
     })
@@ -69,7 +67,8 @@ class App extends Component {
   // has been gathered up to that point of the day.
   calcDayAverage = () => {
     const sum = this.getTempOf(moment().format('DDMMYYYY')).reduce((a, b) => a + b.y, 0)
-    return ( sum / this.state.tempCount).toFixed(1)
+    const length = this.getTempOf(moment().format('DDMMYYYY')).length
+    return ( sum / length ).toFixed(1)
   }
 
   calcMin = () => {
