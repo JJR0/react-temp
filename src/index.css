@@ -1,21 +1,22 @@
 body {
-  font-family: 'Yanone Kaffeesatz', sans-serif;
-  font-size: 18px;
+  font-family: 'Ubuntu', sans-serif;
+  font-size: 14px;
   text-align: center;
   padding: 0;
   margin: 0;
-  background-color: #f9fbe7;
+  background-color: mediumaquamarine;
 }
 
 .App {
   display: flex;
   flex-direction: column;
+  min-height: 100%;
+  position: relative;
 }
 
 .header {
   width: 100%;
-  padding: 15px 0;
-  background-color: #f0f4c3;
+  padding: 0;
 }
 
 .header h2 {
@@ -24,145 +25,26 @@ body {
   margin: 0;
   padding: 0;
   color: black;
-}
-
-.navigation {
-  width: 100%;
-  padding: 15px 0;
-  margin: 0;
-  background-color: #f0f4c3;
-}
-
-.main {
-  padding: 20px 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.footer {
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-  background-color: #f0f4c3;
-  margin: 0;
-  padding: 10px 0;
-}
-
-#logged-div {
-  width: 500px;
-  text-align: right;
-  font-style: italic;
-  font-size: 12px;
-  margin: 0 auto;
-  margin-bottom: 0px;
-  padding-bottom: 0px;
-}
-
-.nav-bar {
-  opacity: 0;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: row;
-  padding-top: 10px;
-  padding-left: 10px;
-}
-
-@media (min-width: 0px) and (max-width: 768px) {
-  .nav-bar {
-    opacity: 1;
-    position: absolute;
-    left: 10px;
-    top: 50px;
-  }
-
-  #nav-menu {
-    opacity: 0;
-  }
-
-  #temp-now-div {
-    opacity: 0;
-  }
-
-  #last-data-div {
-    opacity: 0;
-  }
-
-}
-
-#hamburger-menu {
-  display: none;
-}
-
-#nav-menu {
-  margin: 0;
-  padding: 0;
-}
-
-#mobile-menu {
-  margin: 0;
-  padding: 0;
-}
-
-#mobile-menu ul,
-#nav-menu ul {
-  list-style: none;
-  text-align: center;
-  margin: 0;
-}
-
-#mobile-menu ul li,
-#nav-menu ul li {
-  display: inline-block;
-}
-
-#mobile-menu ul li span,
-#nav-menu ul li span {
-  display: block;
-  text-decoration: none;
-  color: black;
-  font-weight: 300;
-  text-transform: uppercase;
-  margin-right: 20px;
-}
-
-#nav-menu ul li span,
-#nav-menu ul li span:after,
-#nav-menu ul li span:before {
-  transition: all .5s;
-}
-
-#nav-menu ul li span {
-  position: relative;
-}
-
-#nav-menu ul li span:after {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  width: 0%;
-  content: '.';
-  color: transparent;
-  background: black;
-  height: 1px;
-}
-
-#nav-menu ul li span:hover:after {
-  width: 100%;
-}
-
-#nav-menu ul li span:hover {
-  color: black;
+  margin-top: 10px;
 }
 
 #temp-now-div {
-  position: absolute;
-  left: 10px;
-  top: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   font-size: 1rem;
+}
+
+.main {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+#date-header {
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 
 #temp-now {
@@ -170,19 +52,12 @@ body {
 }
 
 #last-data-div {
-  position: absolute;
-  left: 10px;
-  top: 40px;
-  margin: 0 auto;
-  margin-bottom: 20px;
+  margin: auto;
   display: grid;
-  grid-template-columns: 100px 100px 100px;
+  grid-template-columns: 120px 120px 120px;
   grid-template-rows: 20px 20px;
-  font-size: 1rem;
-}
-
-.info-item {
-  align-content: center;
+  margin-top: 30px;
+  font-size: 14px;
 }
 
 .datepicker {
@@ -197,40 +72,9 @@ h4 {
   padding-top: 0px;
 }
 
-#login-div h4 {
-  margin: 0;
-  padding: 0;
-  margin-bottom: 10px;
-  font-weight: 500;
+#date {
+  margin-bottom: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: underline;
 }
-
-#settings-div h4 {
-  margin: 0;
-  padding: 0;
-  margin-bottom: 10px;
-  font-weight: 500;
-}
-
-#login-grid {
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 130px 130px;
-  grid-template-rows: 20px 20px;
-  grid-gap: 5px;
-  justify-content: center;
-  justify-items: start;
-}
-
-input {
-  width: 130px;
-}
-
-#login-button {
-  margin-top: 10px;
-}
-
-#freq-input {
-  width: 100px;
-  margin-right: 10px;
-}
-

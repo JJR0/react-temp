@@ -2,14 +2,10 @@ import React, { Component } from 'react'
 import moment from 'moment'
 import DatePicker from 'react-datepicker'
 import LineChart from 'react-linechart'
-import HamburgerMenu from 'react-hamburger-menu'
 import temperatureService from './services/temperature'
-import loginService from './services/login'
 import '../node_modules/react-linechart/dist/styles.css'
 import '../node_modules/react-datepicker/dist/react-datepicker.css'
 import './index.css'
-import Loginform from './components/Loginform'
-import NavigationMenu from './components/Navigation'
 import 'moment/locale/fi'
 
 moment.locale('fi')
@@ -26,13 +22,9 @@ class App extends Component {
       dayAverage: 0,
       temperatureNow: 0,
       active: false,
-      showHome: true,
-      showLogin: false,
-      showSettings: false,
-      username: '',
-      password: '',
-      user: null,
-      updateFreq: 0
+      min_temp: 0,
+      max_temp: 0,
+      average_temp: 0,
     }
   }
   
@@ -42,13 +34,12 @@ class App extends Component {
         data: data,
       }, () => {
         const todayTemps = this.getTempOf(moment().format('DDMMYYYY'))
-        const lastTemp = todayTemps[todayTemps.length-1]
         this.setState({ 
-          lastHourData: lastTemp.y.toFixed(1),
-          lastHour: lastTemp.x,
           tempCount: todayTemps.length
         }, () => {
           this.setState({ dayAverage: this.calcDayAverage() })
+          this.setState({ min_temp: this.calcMin() })
+          this.setState({ max_temp: this.calcMax() })
         })
       })
     })
@@ -56,13 +47,6 @@ class App extends Component {
     temperatureService.getTempNow().then(data => {
       this.setState({ temperatureNow: data.toFixed(1) })
     })
-
-    const loggedUserJSON = window.localStorage.getItem('loggedUser')
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      this.setState({user})
-      temperatureService.setToken(user.token)
-    }
   }
   
   // Set state when date is change in datepicker
@@ -87,6 +71,16 @@ class App extends Component {
     const sum = this.getTempOf(moment().format('DDMMYYYY')).reduce((a, b) => a + b.y, 0)
     return ( sum / this.state.tempCount).toFixed(1)
   }
+
+  calcMin = () => {
+    const array_temp = this.getTempOf(moment().format('DDMMYYYY'))
+    return array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y).toFixed(1)
+  }
+
+  calcMax = () => {
+    const array_temp = this.getTempOf(moment().format('DDMMYYYY'))
+    return array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y).toFixed(1)
+  }
   
   // Returns list of temperatures of the date (moment.js object)
   // If there are no temperature date on the date, empty array is returned
@@ -100,70 +94,13 @@ class App extends Component {
     else
       return []
   }
-  
-  // Handles which window is shown, when link has been clicked in navigation bar.
-  handleWindow = (window) => {
-    switch(window) {
-      case 'etusivu':
-        this.setState({ showHome: true, showLogin: false, showSettings: false })
-        return
-      case 'login':
-        this.setState({ showHome: false, showLogin: true, showSettings: false })
-        return
-      case 'settings':
-        this.setState({ showHome: false, showLogin: false, showSettings: true })
-        return
-      default:
-        return
-    }
-  }
-  
-  // Handles input field changes
-  handleFieldChange = (e) => this.setState({ [e.target.name]: e.target.value })
-  
-  handleFreqChange = (e) => this.setState({ updateFreq: parseInt(e.target.value) })
-
-  // Tries to login, if not correct credentials error occurs
-  login = async (event) => {
-    event.preventDefault()
-    try{
-      const user = await loginService.login({
-        username: this.state.username,
-        password: this.state.password
-      })
-  
-      window.localStorage.setItem('loggedUser', JSON.stringify(user))
-      temperatureService.setToken(user.token)
-      this.setState({ username: '', password: '', user, showHome: true, showLogin: false})
-    } catch(exception) {
-      console.log(exception)
-    }
-  }
-
-  logout = (event) => {
-    event.preventDefault()
-    
-    window.localStorage.removeItem('loggedUser')
-    this.setState({ user: null })
-  }
-  
-  changeUpdateFreq = async (event) => {
-    event.preventDefault()
-    try {
-      const newValue = await temperatureService.changeSettings(5000)
-      
-    } catch (exception) {
-        console.log(exception)
-    }
-  }
 
   homeScreen = () => {
     const tempToShow = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
-    
+
     return [
         <div id='day-selector'>
-          Minkä päivän lämpötilatiedot haluat nähdä?
-          <br/>
+          <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
           <DatePicker
             inline
             className='datepicker'
@@ -174,60 +111,31 @@ class App extends Component {
           />
         </div>,
         <div id='line-chart'>
-          <h4>Lämpötila tunti tunnilta</h4>
           <LineChart
             className='linechart'
-            width={400}
+            width={500}
             height={400}
             data={[ {color: 'steelblue', points: tempToShow} ]}
             xMin="0"
             xMax="24"
             yMin="21"
             yMax="27"
-            xLabel="Tunnit"
+            xLabel="Kellonaika"
             yLabel="Lämpötila (&#8451;)"
             pointRadius="1"
             onPointHover={(point) => this.showTooltip(point)}
             ticks="12"
           />
         </div>,
+        <div id='last-data-div'>
+          <div className='info-item'>Päivän keskiarvo:</div>
+          <div className='info-item'>Matalin lämpötila:</div>
+          <div className='info-item'>Korkein lämpötila:</div>
+          <div className='info-item'>{this.state.dayAverage} &#8451;</div>
+          <div className='info-item'>{this.state.min_temp} &#8451;</div>
+          <div className='info-item'>{this.state.max_temp} &#8451;</div>
+        </div>,
       ]
-  }
-  
-  loginScreen = () => {
-    return (
-      <div id='login-div'>
-        <h4>Kirjautuminen</h4>
-        <Loginform
-          login={this.login}
-          handleFieldChange={this.handleFieldChange}
-          username={this.state.username}
-          password={this.state.password}
-        />
-      </div>
-    )
-  }
-  
-  settingsScreen = () => {
-    return (
-      <div id='settings-div'>
-        <h4>Asetukset</h4>
-        <form onSubmit={this.changeUpdateFreq}>
-          Lämpötiladatan päivitystiheys (sekunneissa):
-          <br/>
-          <input
-            id='freq-input'
-            type='number'
-            name='updateFreq'
-            value={this.state.updateFreq}
-            onChange={this.handleFreqChange}
-            min='0'
-            max='99999'
-            />
-          <button type='submit'>Tallenna</button>
-        </form>
-      </div>
-    )
   }
   
   render() {
@@ -236,52 +144,11 @@ class App extends Component {
         <div className='header'>
           <h2>Lämpötilaseuranta</h2>
           <div id='temp-now-div'>
-            Lämpötila nyt <span id='temp-now'>{this.state.temperatureNow} &#8451;</span>
-          </div>
-          <div id='last-data-div'>
-            <div className='info-item'>Viimeisin lämpötila:</div>
-            <div className='info-item'>Päivän keskiarvo:</div>
-            <div className='info-item'>Tiedot päivittynyt:</div>
-            <div className='info-item'>{this.state.lastHourData} &#8451; </div>
-            <div className='info-item'>{this.state.dayAverage} &#8451;</div>
-            <div className='info-item'>klo: {this.state.lastHour}</div>
+            Lämpötila nyt: <span id='temp-now'>{this.state.temperatureNow} &#8451;</span>
           </div>
         </div>
-
-        <div className='navigation'>
-          <div className='nav-bar'>
-            <HamburgerMenu
-              id='hamburger-menu'
-              isOpen={this.state.active}
-              menuClicked={() => this.setState({ active: !this.state.active })}
-              width={24}
-              height={18}
-              strokeWidth={2}
-              rotate={0}
-              color='black'
-              borderRadius={0}
-              animationDuration={0.5}
-              />
-
-            {this.state.active ? <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} logout={this.logout} name="mobile-menu" /> : null}
-          </div>
-
-          <NavigationMenu handleWindow={this.handleWindow} user={this.state.user} logout={this.logout} name="nav-menu" />
-        </div>
-
-
-
-
         <div className='main'>
-          {this.state.showHome ? this.homeScreen() : null }
-          
-          {this.state.showLogin ? this.loginScreen() : null }
-          
-          {this.state.showSettings ? this.settingsScreen() : null }
-        </div>
-
-        <div className='footer'>
-          www.datalogger.xyz (c) 2018
+          {this.homeScreen()}
         </div>
       </div>
     )
