@@ -24,6 +24,7 @@ class App extends Component {
       min_temp: 0,
       max_temp: 0,
       average_temp: 0,
+      data_found: true
     }
   }
   
@@ -52,9 +53,20 @@ class App extends Component {
         this.setState({
           data: data
         }, () => {
-          this.setState({ dayAverage: this.calcDayAverage() })
-          this.setState({ min_temp: this.calcMin() })
-          this.setState({ max_temp: this.calcMax() })
+          this.setState({ 
+            dayAverage: this.calcDayAverage(),
+            min_temp: this.calcMin(),
+            max_temp: this.calcMax(),
+            data_found: true
+          })
+        })
+      }).catch(error => {
+        this.setState({
+          data: [],
+          dayAverage: "-",
+          min_temp: "-",
+          max_temp: "-",
+          data_found: false
         })
       })
     })
@@ -66,18 +78,20 @@ class App extends Component {
   // Calculates average temperature of the day according to data, which 
   // has been gathered up to that point of the day.
   calcDayAverage = () => {
-    const sum = this.getTempOf(moment().format('DDMMYYYY')).reduce((a, b) => a + b.y, 0)
-    const length = this.getTempOf(moment().format('DDMMYYYY')).length
+    const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY')).reduce((a, b) => a + b.y, 0)
+    const length = this.getTempOf(this.state.startDate.format('DDMMYYYY')).length
     return ( sum / length ).toFixed(1)
   }
 
   calcMin = () => {
-    const array_temp = this.getTempOf(moment().format('DDMMYYYY'))
+    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
+    console.log('array temp: ', array_temp)
     return array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y).toFixed(1)
   }
 
   calcMax = () => {
-    const array_temp = this.getTempOf(moment().format('DDMMYYYY'))
+    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
+    console.log('array temp: ', array_temp)
     return array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y).toFixed(1)
   }
   
@@ -98,43 +112,43 @@ class App extends Component {
     const tempToShow = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
 
     return [
-        <div id='day-selector'>
-          <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
-          <DatePicker
-            inline
-            className='datepicker'
-            selected={this.state.startDate}
-            onChange={this.handleDateChange}
-            dateFormat="DD.MM.YYYY"
-            locale="fi"
-          />
-        </div>,
-        <div id='line-chart'>
-          <LineChart
-            className='linechart'
-            width={500}
-            height={400}
-            data={[ {color: 'steelblue', points: tempToShow} ]}
-            xMin="0"
-            xMax="24"
-            yMin="21"
-            yMax="27"
-            xLabel="Kellonaika"
-            yLabel="Lämpötila (&#8451;)"
-            pointRadius="1"
-            onPointHover={(point) => this.showTooltip(point)}
-            ticks="12"
-          />
-        </div>,
-        <div id='last-data-div'>
-          <div className='info-item'>Päivän keskiarvo:</div>
-          <div className='info-item'>Matalin lämpötila:</div>
-          <div className='info-item'>Korkein lämpötila:</div>
-          <div className='info-item'>{this.state.dayAverage} &#8451;</div>
-          <div className='info-item'>{this.state.min_temp} &#8451;</div>
-          <div className='info-item'>{this.state.max_temp} &#8451;</div>
-        </div>,
-      ]
+      <div id='day-selector'>
+        <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
+        <DatePicker
+          inline
+          className='datepicker'
+          selected={this.state.startDate}
+          onChange={this.handleDateChange}
+          dateFormat="DD.MM.YYYY"
+          locale="fi"
+        />
+      </div>,
+      <div id='line-chart'>
+        <LineChart
+          className='linechart'
+          width={500}
+          height={400}
+          data={[ {color: 'steelblue', points: tempToShow} ]}
+          xMin="0"
+          xMax="24"
+          yMin="21"
+          yMax="27"
+          xLabel="Kellonaika"
+          yLabel="Lämpötila (&#8451;)"
+          pointRadius="1"
+          onPointHover={(point) => this.showTooltip(point)}
+          ticks="12"
+        />
+      </div>,
+      <div id='last-data-div'>
+        <div className='info-item'>Päivän keskiarvo:</div>
+        <div className='info-item'>Matalin lämpötila:</div>
+        <div className='info-item'>Korkein lämpötila:</div>
+        <div className='info-item'>{this.state.dayAverage} &#8451;</div>
+        <div className='info-item'>{this.state.min_temp} &#8451;</div>
+        <div className='info-item'>{this.state.max_temp} &#8451;</div>
+      </div>
+    ]
   }
   
   render() {
