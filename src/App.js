@@ -17,6 +17,8 @@ class App extends Component {
       startDate: moment(),
       data: [],
       temperatureNow: 0,
+      livingroomNow: 0,
+      outsideNow: 0,
       dayAverage: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
       min_temp: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
       max_temp: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
@@ -184,13 +186,13 @@ class App extends Component {
           <div className="collapse navbar-collapse" id="navbar">
             <ul className="navbar-nav mr-auto">
               <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'livingroom')}>
-                <span className="nav-link">Olohuone: <span id='temp-now'>- &#8451;</span></span>
+                <span className="nav-link">Olohuone: <span id='temp-now'>{this.state.livingroomNow} &#8451;</span></span>
               </li>
               <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'bedroom')}>
                 <span className="nav-link">Makuuhuone: <span id='temp-now'>{this.state.temperatureNow} &#8451;</span></span>
               </li>
               <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'outside')}>
-                <span className="nav-link">Ulkolämpötila: <span id='temp-now'>- &#8451;</span></span>
+                <span className="nav-link">Ulkolämpötila: <span id='temp-now'>{this.state.outsideNow} &#8451;</span></span>
               </li>
             </ul>
             <ul className="nav navbar-nav ml-auto justify-content-end">
