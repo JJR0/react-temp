@@ -1,45 +1,36 @@
 body {
+  background-color: lightsteelblue;
   font-family: 'Ubuntu', sans-serif;
   font-size: 14px;
-  text-align: center;
-  padding: 0;
   margin: 0;
-  background-color: lightsteelblue;
+  padding: 0;
+  text-align: center;
 }
 
 .App {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  position: relative;
 }
 
-.header {
-  width: 100%;
-  padding: 0;
+.navbar {
+  background-color: steelblue;
 }
 
-.header h2 {
-  text-transform: uppercase;
-  font-weight: 550;
-  margin: 0;
-  padding: 0;
-  color: black;
-  margin-top: 10px;
+.login-li {
+  font-size: 10px;
+  display: none;
 }
 
 #temp-now-div {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  font-size: 1rem;
+  color: white;
 }
 
 .main {
-  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 #date-header {
@@ -47,38 +38,24 @@ body {
   margin-bottom: 20px;
 }
 
-#temp-now {
-  font-weight: bold;
+.datepicker {
+  border: 1px solid steelblue;
+  border-radius: 3px;
+  padding: 2px 5px;
 }
 
-#last-data-div {
-  margin: auto;
+#checkboxes {
+  margin-top: 20px;
+}
+
+#checkboxes label {
+  margin-right: 10px;
+}
+
+#extra-div {
   display: grid;
   grid-template-columns: 120px 120px 120px;
   grid-template-rows: 20px 20px;
-  margin-top: 30px;
-  font-size: 14px;
-}
-
-.datepicker {
-  padding: 2px 5px;
-  border: 1px solid steelblue;
-  border-radius: 3px;
-}
-
-h4 {
+  margin: auto;
   margin-top: 20px;
-  margin-bottom: 0px;
-  padding-top: 0px;
-}
-
-#date {
-  margin-bottom: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-#error-text {
-  margin-top: 50px;
 }

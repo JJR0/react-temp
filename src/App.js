@@ -16,15 +16,17 @@ class App extends Component {
     this.state = {
       startDate: moment(),
       data: [],
-      lastHour: 0,
-      lastHourData: 0,
-      dayAverage: 0,
       temperatureNow: 0,
-      active: false,
-      min_temp: 0,
-      max_temp: 0,
-      average_temp: 0,
-      data_found: true
+      dayAverage: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
+      min_temp: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
+      max_temp: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
+      data_found: true,
+      livingroom: false,
+      bedroom: true,
+      outside: false,
+      bedroom_details: true,
+      livingroom_details: false,
+      outside_details: false,
     }
   }
   
@@ -33,9 +35,11 @@ class App extends Component {
       this.setState({
         data: data,
       }, () => {
-        this.setState({ dayAverage: this.calcDayAverage() })
-        this.setState({ min_temp: this.calcMin() })
-        this.setState({ max_temp: this.calcMax() })
+        this.setState({
+          dayAverage: { 'bedroom': this.calcDayAverage('bedroom'), 'livingroom': this.calcDayAverage('livingroom'), 'outside': this.calcDayAverage('outside')},
+          min_temp: { 'bedroom': this.calcMin('bedroom'), 'livingroom': this.calcMin('livingroom'), 'outside': this.calcMin('outside')},
+          max_temp: { 'bedroom': this.calcMax('bedroom'), 'livingroom': this.calcMax('livingroom'), 'outside': this.calcMax('outside')},
+        })
       })
     })
 
@@ -44,7 +48,6 @@ class App extends Component {
     })
   }
   
-  // Set state when date is change in datepicker
   handleDateChange = (date) => {
     this.setState({
       startDate: date
@@ -54,114 +57,203 @@ class App extends Component {
           data: data
         }, () => {
           this.setState({ 
-            dayAverage: this.calcDayAverage(),
-            min_temp: this.calcMin(),
-            max_temp: this.calcMax(),
+            dayAverage: { 'bedroom': this.calcDayAverage('bedroom'), 'livingroom': this.calcDayAverage('livingroom'), 'outside': this.calcDayAverage('outside')},
+            min_temp: { 'bedroom': this.calcMin('bedroom'), 'livingroom': this.calcMin('livingroom'), 'outside': this.calcMin('outside')},
+            max_temp: { 'bedroom': this.calcMax('bedroom'), 'livingroom': this.calcMax('livingroom'), 'outside': this.calcMax('outside')},
             data_found: true
           })
         })
       }).catch(error => {
         this.setState({
           data: [],
-          dayAverage: "-",
-          min_temp: "-",
-          max_temp: "-",
+          dayAverage: { 'bedroom': '-', 'livingroom': '-', 'outside': '-'},
+          min_temp: { 'bedroom': '-', 'livingroom': '-', 'outside': '-'},
+          max_temp: { 'bedroom': '-', 'livingroom': '-', 'outside': '-'},
           data_found: false
         })
       })
     })
   }
   
-  // Describes the html element, which is shown when hovered over data point in chart.
-  showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
+  showTooltip = (point) => "<div className='tooltip-div'>" + point.y.toFixed(1) + "&#8451<br/>klo " + point.x + "</div>"
   
-  // Calculates average temperature of the day according to data, which 
-  // has been gathered up to that point of the day.
-  calcDayAverage = () => {
-    const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY')).reduce((a, b) => a + b.y, 0)
-    const length = this.getTempOf(this.state.startDate.format('DDMMYYYY')).length
+  calcDayAverage = (location) => {
+    const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => a + b.y, 0)
+    const length = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).length
     return ( sum / length ).toFixed(1)
   }
 
-  calcMin = () => {
-    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
-    console.log('array temp: ', array_temp)
-    return array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y).toFixed(1)
+  calcMin = (location) => {
+    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
+
+    if (array_temp.length === 0)
+      return 0
+
+    const minimum = array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y)
+
+    if (minimum !== null)
+      return minimum.toFixed(1)
+    else
+      return minimum
   }
 
-  calcMax = () => {
-    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
-    console.log('array temp: ', array_temp)
-    return array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y).toFixed(1)
+  calcMax = (location) => {
+    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
+
+    if (array_temp.length === 0)
+      return 0
+
+    const maximum = array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y)
+
+    if (maximum !== null)
+      return maximum.toFixed(1)
+    else
+      return maximum
   }
   
-  // Returns list of temperatures of the date (moment.js object)
-  // If there are no temperature date on the date, empty array is returned
-  getTempOf = (date) => {
+  getTempOf = (date, location) => {
     if (this.state.data[0] === [] || typeof this.state.data[0] === 'undefined') return []
 
     const date_obj = this.state.data.find(e => e.date === date)
     
-    if (typeof date_obj !== 'undefined')
-      return date_obj.temperatures
-    else
+    if (typeof date_obj !== 'undefined') {
+      if (location === 'bedroom')
+        return date_obj.temperatures
+      else if (location === 'livingroom')
+        return date_obj.livingroom_temp
+      else if (location === 'outside')
+        return date_obj.outside_temp
+    } else
       return []
   }
 
-  homeScreen = () => {
-    const tempToShow = this.getTempOf(this.state.startDate.format('DDMMYYYY'))
-
-    return [
-      <div id='day-selector'>
-        <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
-        <DatePicker
-          inline
-          className='datepicker'
-          selected={this.state.startDate}
-          onChange={this.handleDateChange}
-          dateFormat="DD.MM.YYYY"
-          locale="fi"
-        />
-      </div>,
-      <div id='line-chart'>
-        <LineChart
-          className='linechart'
-          width={500}
-          height={400}
-          data={[ {color: 'steelblue', points: tempToShow} ]}
-          xMin="0"
-          xMax="24"
-          yMin="21"
-          yMax="27"
-          xLabel="Kellonaika"
-          yLabel="Lämpötila (&#8451;)"
-          pointRadius="1"
-          onPointHover={(point) => this.showTooltip(point)}
-          ticks="12"
-        />
-      </div>,
-      <div id='last-data-div'>
-        <div className='info-item'>Päivän keskiarvo:</div>
-        <div className='info-item'>Matalin lämpötila:</div>
-        <div className='info-item'>Korkein lämpötila:</div>
-        <div className='info-item'>{this.state.dayAverage} &#8451;</div>
-        <div className='info-item'>{this.state.min_temp} &#8451;</div>
-        <div className='info-item'>{this.state.max_temp} &#8451;</div>
-      </div>
-    ]
+  handleCheckboxChange = (event) => {
+    this.setState({ [event.target.name]: event.target.checked })
   }
-  
+
+  handleNavClick = (event, location) => {
+    switch (location) {
+      case 'bedroom':
+        this.setState({
+          bedroom_details: true,
+          livingroom_details: false,
+          outside_details: false,
+        })
+        break;
+      case 'livingroom':
+        this.setState({
+          bedroom_details: false,
+          livingroom_details: true,
+          outside_details: false,
+        })
+        break;
+      case 'outside':
+        this.setState({
+          bedroom_details: false,
+          livingroom_details: false,
+          outside_details: true,
+        })
+        break;
+      default:
+        break;
+    }
+  }
+
+  locationDetails = () => {
+    if (this.state.bedroom_details)
+      return [this.state.dayAverage['bedroom'], this.state.min_temp['bedroom'], this.state.max_temp['bedroom']]
+    else if (this.state.livingroom_details)
+      return [this.state.dayAverage['livingroom'], this.state.min_temp['livingroom'], this.state.max_temp['livingroom']]
+    else if (this.state.outside_details)
+      return [this.state.dayAverage['outside'], this.state.min_temp['outside'], this.state.max_temp['outside']]
+  }
+
   render() {
+    const tempToShow = this.state.bedroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'bedroom') : []
+    const livingroom_temps = this.state.livingroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'livingroom') : []
+    const outside_temps = this.state.outside ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'outside') : []
+
+
     return (
       <div className="App">
-        <div className='header'>
-          <h2>Lämpötilaseuranta</h2>
-          <div id='temp-now-div'>
-            Lämpötila nyt: <span id='temp-now'>{this.state.temperatureNow} &#8451;</span>
+        <nav className="navbar navbar-expand-md navbar-dark fixed-top">
+          <span className="navbar-brand">Lämpötilaseuranta</span>
+          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbar">
+            <ul className="navbar-nav mr-auto">
+              <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'livingroom')}>
+                <span className="nav-link">Olohuone: <span id='temp-now'>- &#8451;</span></span>
+              </li>
+              <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'bedroom')}>
+                <span className="nav-link">Makuuhuone: <span id='temp-now'>{this.state.temperatureNow} &#8451;</span></span>
+              </li>
+              <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'outside')}>
+                <span className="nav-link">Ulkolämpötila: <span id='temp-now'>- &#8451;</span></span>
+              </li>
+            </ul>
+            <ul className="nav navbar-nav ml-auto justify-content-end">
+              <li className='nav-item active'>
+                <span className='nav-link details'>Keskiarvo: <span>{this.locationDetails()[0]} &#8451;</span></span>
+              </li>
+              <li className='nav-item active'>
+                <span className='nav-link details'>Matalin: <span>{this.locationDetails()[1]} &#8451;</span></span>
+              </li>
+              <li className='nav-item active'>
+                <span className='nav-link details'>Korkein: <span>{this.locationDetails()[2]} &#8451;</span></span>
+              </li>
+            </ul>
           </div>
-        </div>
+        </nav>
         <div className='main'>
-          {this.homeScreen()}
+          <div id='day-selector'>
+            <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
+            <DatePicker
+              inline
+              className='datepicker'
+              selected={this.state.startDate}
+              onChange={this.handleDateChange}
+              dateFormat="DD.MM.YYYY"
+              locale="fi" />
+          </div>
+          <div id='line-chart'>
+            <LineChart
+              className='linechart'
+              width={500}
+              height={400}
+              data={[ { name: 'Makuuhuone', color: 'steelblue', points: tempToShow}, { name: 'Olohuone', color: 'navy', points: livingroom_temps}, { name: 'Ulko', color: 'green', points: outside_temps} ]}
+              xMin="0"
+              xMax="24"
+              yMin="21"
+              yMax="27"
+              xLabel="Kellonaika"
+              yLabel="Lämpötila (&#8451;)"
+              pointRadius="1"
+              onPointHover={(point) => this.showTooltip(point)}
+              ticks="12"
+              showLegends="true" />
+          </div>
+          <div id='checkboxes'>
+            <input
+            name='livingroom'
+            type='checkbox'
+            checked={this.state.livingroom}
+            onChange={this.handleCheckboxChange} />
+            <label>Olohuone</label>
+            <input
+              name='bedroom'
+              type='checkbox'
+              checked={this.state.bedroom}
+              onChange={this.handleCheckboxChange} />
+            <label>Makuuhuone</label>
+            <input
+              name='outside'
+              type='checkbox'
+              checked={this.state.outside}
+              onChange={this.handleCheckboxChange} />
+            <label>Ulkolämpötila</label>
+          </div>
         </div>
       </div>
     )
