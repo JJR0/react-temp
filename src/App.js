@@ -77,12 +77,12 @@ class App extends Component {
     })
   }
   
-  showTooltip = (point) => "<div className='tooltip-div'>" + point.y.toFixed(1) + "&#8451<br/>klo " + point.x + "</div>"
+  showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
   
   calcDayAverage = (location) => {
     const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => a + b.y, 0)
     const length = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).length
-    return ( sum / length ).toFixed(1)
+    return ( sum / length )
   }
 
   calcMin = (location) => {
@@ -94,7 +94,7 @@ class App extends Component {
     const minimum = array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y)
 
     if (minimum !== null)
-      return minimum.toFixed(1)
+      return minimum
     else
       return minimum
   }
@@ -108,7 +108,7 @@ class App extends Component {
     const maximum = array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y)
 
     if (maximum !== null)
-      return maximum.toFixed(1)
+      return maximum
     else
       return maximum
   }
