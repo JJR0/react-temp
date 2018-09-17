@@ -42,6 +42,7 @@ class App extends Component {
           min_temp: { 'bedroom': this.calcMin('bedroom'), 'livingroom': this.calcMin('livingroom'), 'outside': this.calcMin('outside')},
           max_temp: { 'bedroom': this.calcMax('bedroom'), 'livingroom': this.calcMax('livingroom'), 'outside': this.calcMax('outside')},
         })
+        this.getLastTemp()
       })
     })
 
@@ -82,19 +83,23 @@ class App extends Component {
   calcDayAverage = (location) => {
     const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => a + b.y, 0)
     const length = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).length
-    return ( sum / length )
+    
+    if (length === 0)
+      return '-'
+    else
+      return parseFloat( sum / length ).toFixed(1)
   }
 
   calcMin = (location) => {
     const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
 
     if (array_temp.length === 0)
-      return 0
+      return '-'
 
     const minimum = array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y)
 
     if (minimum !== null)
-      return minimum
+      return parseFloat(minimum).toFixed(1)
     else
       return minimum
   }
@@ -103,12 +108,12 @@ class App extends Component {
     const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
 
     if (array_temp.length === 0)
-      return 0
+      return '-'
 
     const maximum = array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y)
 
     if (maximum !== null)
-      return maximum
+      return parseFloat(maximum).toFixed(1)
     else
       return maximum
   }
@@ -170,11 +175,26 @@ class App extends Component {
       return [this.state.dayAverage['outside'], this.state.min_temp['outside'], this.state.max_temp['outside']]
   }
 
+  // Get livingroom and outside last temperature data
+  getLastTemp = (location) => {
+    const array = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
+    
+    if (array === undefined) return '-'
+    if (array.length === 0) return '-'
+    if (array[array.length-1] === undefined) return '-'
+
+    if (location === 'livingroom') {
+      this.setState({ livingroomNow: array[array.length-1].y })
+    } else if (location === 'outside') {
+      this.setState({ outsideNow: array[array.length-1].y })
+    }
+  }
+
+
   render() {
     const tempToShow = this.state.bedroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'bedroom') : []
     const livingroom_temps = this.state.livingroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'livingroom') : []
     const outside_temps = this.state.outside ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'outside') : []
-
 
     return (
       <div className="App">
