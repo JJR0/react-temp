@@ -29,6 +29,10 @@ class App extends Component {
       bedroom_details: true,
       livingroom_details: false,
       outside_details: false,
+      chartheight: 400,
+      chartwidth: 500,
+      min_range: "21",
+      max_range: "27",
     }
   }
   
@@ -42,7 +46,10 @@ class App extends Component {
           min_temp: { 'bedroom': this.calcMin('bedroom'), 'livingroom': this.calcMin('livingroom'), 'outside': this.calcMin('outside')},
           max_temp: { 'bedroom': this.calcMax('bedroom'), 'livingroom': this.calcMax('livingroom'), 'outside': this.calcMax('outside')},
         })
-        this.getLastTemp()
+        this.getLastTemp('livingroom')
+        this.getLastTemp('outside')
+      }, () => {
+        this.calcRanges()
       })
     })
 
@@ -81,8 +88,10 @@ class App extends Component {
   showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
   
   calcDayAverage = (location) => {
-    const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => a + b.y, 0)
+    const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => parseFloat(a) + parseFloat(b.y), 0)
+    console.log('summa: ', sum)
     const length = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).length
+    console.log('length: ', length)
     
     if (length === 0)
       return '-'
@@ -135,7 +144,11 @@ class App extends Component {
   }
 
   handleCheckboxChange = (event) => {
-    this.setState({ [event.target.name]: event.target.checked })
+    this.setState({
+      [event.target.name]: event.target.checked
+    }, () => {
+      this.calcRanges()
+    })
   }
 
   handleNavClick = (event, location) => {
@@ -185,11 +198,46 @@ class App extends Component {
 
     if (location === 'livingroom') {
       this.setState({ livingroomNow: array[array.length-1].y })
+      console.log(array[array.length-1].y)
     } else if (location === 'outside') {
       this.setState({ outsideNow: array[array.length-1].y })
+      console.log(array[array.length-1].y)
     }
   }
 
+  calcRanges = () => {
+    let min_range = this.state.min_range
+    let max_range = this.state.max_range
+    let min_changed = false
+    let step = 2
+
+    let bedroom_checked = this.state.bedroom
+    let livingroom_checked = this.state.livingroom
+    let outside_checked = this.state.outside
+
+    let bedroom_min = this.state.min_temp['bedroom']
+    let bedroom_max = this.state.max_temp['bedroom']
+    let livingroom_min = this.state.min_temp['livingroom']
+    let livingroom_max = this.state.max_temp['livingroom']
+    let outside_min = this.state.min_temp['outside']
+    let outside_max = this.state.max_temp['outside']
+
+    if (outside_checked && !bedroom_checked && !livingroom_checked) {
+      if ((outside_max - outside_min) + 2 < 6) {
+        step = Math.round((6 - (outside_max - outside_min))/2)
+        console.log('outside_max: ', outside_max)
+        console.log('outside_min: ', outside_min)
+        console.log('step: ', step)
+      } else {
+        step = 1
+      }
+      this.setState({ min_range: Math.floor(outside_min - step), max_range: Math.round(outside_max + step) })
+    } else if (outside_checked && bedroom_checked) {
+      this.setState({ min_range: Math.floor(outside_min - 2), max_range: Math.round(bedroom_max + 2) })
+    } else {
+      this.setState({ min_range: 21, max_range: 27})
+    }
+  }
 
   render() {
     const tempToShow = this.state.bedroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'bedroom') : []
@@ -242,13 +290,13 @@ class App extends Component {
           <div id='line-chart'>
             <LineChart
               className='linechart'
-              width={500}
-              height={400}
+              width={this.state.chartwidth}
+              height={this.state.chartheight}
               data={[ { name: 'Makuuhuone', color: 'steelblue', points: tempToShow}, { name: 'Olohuone', color: 'navy', points: livingroom_temps}, { name: 'Ulko', color: 'green', points: outside_temps} ]}
               xMin="0"
               xMax="24"
-              yMin="21"
-              yMax="27"
+              yMin={this.state.min_range}
+              yMax={this.state.max_range}
               xLabel="Kellonaika"
               yLabel="Lämpötila (&#8451;)"
               pointRadius="1"
