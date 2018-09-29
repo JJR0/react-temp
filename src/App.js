@@ -1,12 +1,12 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import DatePicker from 'react-datepicker'
-import LineChart from 'react-linechart'
 import temperatureService from './services/temperature'
-import '../node_modules/react-linechart/dist/styles.css'
-import '../node_modules/react-datepicker/dist/react-datepicker.css'
-import './index.css'
+import loginService from './services/login'
 import 'moment/locale/fi'
+import Tempdetails from './components/Tempdetails'
+import Navigation from './components/Navigation'
+import Tempview from './components/Tempview'
+import Loginscreen from './components/Loginscreen'
 
 moment.locale('fi')
 
@@ -23,16 +23,19 @@ class App extends Component {
       min_temp: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
       max_temp: {'bedroom': 0, 'livingroom': 0, 'outside': 0},
       data_found: true,
-      livingroom: false,
-      bedroom: true,
-      outside: false,
-      bedroom_details: true,
+      bedroom_details: false,
       livingroom_details: false,
       outside_details: false,
       chartheight: 400,
       chartwidth: 500,
-      min_range: "21",
-      max_range: "27",
+      min_range: "19",
+      max_range: "25",
+      lastTimeUpdate: {'bedroom': '', 'livingroom': '', 'outside': ''},
+      loginScreen: false,
+      user: null,
+      username: '',
+      password: '',
+      error: null,
     }
   }
   
@@ -56,6 +59,12 @@ class App extends Component {
     temperatureService.getTempNow().then(data => {
       this.setState({ temperatureNow: data.toFixed(1) })
     })
+
+    const loggedUserJSON = window.localStorage.getItem('loggedUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      this.setState({ user })
+    }
   }
   
   handleDateChange = (date) => {
@@ -84,14 +93,12 @@ class App extends Component {
       })
     })
   }
-  
+
   showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
   
   calcDayAverage = (location) => {
     const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => parseFloat(a) + parseFloat(b.y), 0)
-    console.log('summa: ', sum)
     const length = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).length
-    console.log('length: ', length)
     
     if (length === 0)
       return '-'
@@ -105,7 +112,7 @@ class App extends Component {
     if (array_temp.length === 0)
       return '-'
 
-    const minimum = array_temp.reduce((min, temp) => temp.y < min ? temp.y : min, array_temp[0].y)
+    const minimum = array_temp.reduce((min, temp) => parseFloat(temp.y) < min ? parseFloat(temp.y) : min, parseFloat(array_temp[0].y))
 
     if (minimum !== null)
       return parseFloat(minimum).toFixed(1)
@@ -119,7 +126,7 @@ class App extends Component {
     if (array_temp.length === 0)
       return '-'
 
-    const maximum = array_temp.reduce((max, temp) => temp.y > max ? temp.y : max, array_temp[0].y)
+    const maximum = array_temp.reduce((max, temp) => parseFloat(temp.y) > max ? parseFloat(temp.y) : max, parseFloat(array_temp[0].y))
 
     if (maximum !== null)
       return parseFloat(maximum).toFixed(1)
@@ -143,12 +150,14 @@ class App extends Component {
       return []
   }
 
-  handleCheckboxChange = (event) => {
-    this.setState({
-      [event.target.name]: event.target.checked
-    }, () => {
-      this.calcRanges()
-    })
+  getLastUpdateTime = (location) => {
+    const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
+
+    if (array_temp.length === 0)
+      return
+    
+    const maximum = array_temp.reduce((max, temp) => temp.x > max ? temp.x : max, array_temp[0].x)
+    return maximum
   }
 
   handleNavClick = (event, location) => {
@@ -158,37 +167,50 @@ class App extends Component {
           bedroom_details: true,
           livingroom_details: false,
           outside_details: false,
+          loginScreen: false,
+          startDate: moment()
         })
+        this.handleDateChange(moment())
         break;
       case 'livingroom':
         this.setState({
           bedroom_details: false,
           livingroom_details: true,
           outside_details: false,
+          loginScreen: false,
+          startDate: moment()
         })
+        this.handleDateChange(moment())
         break;
       case 'outside':
         this.setState({
           bedroom_details: false,
           livingroom_details: false,
           outside_details: true,
+          loginScreen: false,
+          startDate: moment()
         })
+        this.handleDateChange(moment())
+        break;
+      case 'frontpage':
+        this.setState({
+          bedroom_details: false,
+          livingroom_details: false,
+          outside_details: false,
+          loginScreen: false,
+          startDate: moment()
+        })
+        this.handleDateChange(moment())
         break;
       default:
         break;
     }
   }
 
-  locationDetails = () => {
-    if (this.state.bedroom_details)
-      return [this.state.dayAverage['bedroom'], this.state.min_temp['bedroom'], this.state.max_temp['bedroom']]
-    else if (this.state.livingroom_details)
-      return [this.state.dayAverage['livingroom'], this.state.min_temp['livingroom'], this.state.max_temp['livingroom']]
-    else if (this.state.outside_details)
-      return [this.state.dayAverage['outside'], this.state.min_temp['outside'], this.state.max_temp['outside']]
+  locationDetails = (location) => {
+    return [this.state.dayAverage[location], this.state.min_temp[location], this.state.max_temp[location]]
   }
 
-  // Get livingroom and outside last temperature data
   getLastTemp = (location) => {
     const array = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
     
@@ -198,135 +220,216 @@ class App extends Component {
 
     if (location === 'livingroom') {
       this.setState({ livingroomNow: array[array.length-1].y })
-      console.log(array[array.length-1].y)
     } else if (location === 'outside') {
       this.setState({ outsideNow: array[array.length-1].y })
-      console.log(array[array.length-1].y)
     }
   }
 
   calcRanges = () => {
-    let min_range = this.state.min_range
-    let max_range = this.state.max_range
-    let min_changed = false
     let step = 2
 
-    let bedroom_checked = this.state.bedroom
-    let livingroom_checked = this.state.livingroom
-    let outside_checked = this.state.outside
-
-    let bedroom_min = this.state.min_temp['bedroom']
-    let bedroom_max = this.state.max_temp['bedroom']
-    let livingroom_min = this.state.min_temp['livingroom']
-    let livingroom_max = this.state.max_temp['livingroom']
+    // let bedroom_min = this.state.min_temp['bedroom']
+    // let bedroom_max = this.state.max_temp['bedroom']
+    // let livingroom_min = this.state.min_temp['livingroom']
+    // let livingroom_max = this.state.max_temp['livingroom']
     let outside_min = this.state.min_temp['outside']
+    console.log(outside_min)
     let outside_max = this.state.max_temp['outside']
+    console.log(outside_max)
 
-    if (outside_checked && !bedroom_checked && !livingroom_checked) {
+    if (this.state.outside_details && !this.state.bedroom_details && !this.state.livingroom_details && outside_min !== '-' && outside_max !== '-') {
       if ((outside_max - outside_min) + 2 < 6) {
         step = Math.round((6 - (outside_max - outside_min))/2)
-        console.log('outside_max: ', outside_max)
-        console.log('outside_min: ', outside_min)
-        console.log('step: ', step)
       } else {
         step = 1
       }
-      this.setState({ min_range: Math.floor(outside_min - step), max_range: Math.round(outside_max + step) })
-    } else if (outside_checked && bedroom_checked) {
-      this.setState({ min_range: Math.floor(outside_min - 2), max_range: Math.round(bedroom_max + 2) })
-    } else {
-      this.setState({ min_range: 21, max_range: 27})
+      return { 'min_range': Math.floor(outside_min - step), 'max_range': Math.round(outside_max + step) }
+     } else {
+      return { 'min_range': 19,'max_range': 25}
     }
   }
 
-  render() {
-    const tempToShow = this.state.bedroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'bedroom') : []
-    const livingroom_temps = this.state.livingroom ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'livingroom') : []
-    const outside_temps = this.state.outside ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'outside') : []
+  handleLoginClick = () => {
+    this.setState({ loginScreen: true })
+  }
 
-    return (
-      <div className="App">
-        <nav className="navbar navbar-expand-md navbar-dark fixed-top">
-          <span className="navbar-brand">Lämpötilaseuranta</span>
-          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbar">
-            <ul className="navbar-nav mr-auto">
-              <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'livingroom')}>
-                <span className="nav-link">Olohuone: <span id='temp-now'>{this.state.livingroomNow} &#8451;</span></span>
-              </li>
-              <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'bedroom')}>
-                <span className="nav-link">Makuuhuone: <span id='temp-now'>{this.state.temperatureNow} &#8451;</span></span>
-              </li>
-              <li className="nav-item active"  onClick={(e) => this.handleNavClick(e, 'outside')}>
-                <span className="nav-link">Ulkolämpötila: <span id='temp-now'>{this.state.outsideNow} &#8451;</span></span>
-              </li>
-            </ul>
-            <ul className="nav navbar-nav ml-auto justify-content-end">
-              <li className='nav-item active'>
-                <span className='nav-link details'>Keskiarvo: <span>{this.locationDetails()[0]} &#8451;</span></span>
-              </li>
-              <li className='nav-item active'>
-                <span className='nav-link details'>Matalin: <span>{this.locationDetails()[1]} &#8451;</span></span>
-              </li>
-              <li className='nav-item active'>
-                <span className='nav-link details'>Korkein: <span>{this.locationDetails()[2]} &#8451;</span></span>
-              </li>
-            </ul>
+  handleFieldChange = (event) => {
+    this.setState({ [event.target.name]: event.target.value })
+  }
+  
+  login = async (event) => {
+    event.preventDefault()
+    try {
+      const user = await loginService.login({
+        username: this.state.username,
+        password: this.state.password
+      })
+
+      window.localStorage.setItem('loggedUser', JSON.stringify(user))
+      this.setState({ username: '', password: '', user})
+    } catch (exception) {
+      this.setState({ error: 'unsuccess' })
+      setTimeout(() => {
+        this.setState({ error: null })
+      }, 3000);
+    }
+  }
+
+  logout = () => {
+    window.localStorage.removeItem('loggedUser')
+    this.setState({ user: null })
+  }
+
+  render() {
+    const tempToShow = this.state.bedroom_details ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'bedroom') : []
+    const livingroom_temps = this.state.livingroom_details ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'livingroom') : []
+    const outside_temps = this.state.outside_details ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'outside') : []
+
+    if (!this.state.livingroom_details && !this.state.bedroom_details && !this.state.outside_details && !this.state.loginScreen) {
+      return (
+        <div className="App">
+          <Navigation
+            handleNavClick={this.handleNavClick}
+            handleLoginClick={this.handleLoginClick}
+            user={this.state.user} />
+
+          <div id='main-temp' className='container'>
+            <div className='row'>
+              <Tempview
+                tempNow={this.state.livingroomNow}
+                handleNavClick={this.handleNavClick}
+                getLastUpdateTime={this.getLastUpdateTime}
+                locationDetails={this.locationDetails}
+                location='livingroom'
+                header='Olohuone'
+                details={false} />
+              <Tempview
+                tempNow={this.state.temperatureNow}
+                handleNavClick={this.handleNavClick}
+                getLastUpdateTime={this.getLastUpdateTime}
+                locationDetails={this.locationDetails}
+                location='bedroom'
+                header='Makuuhuone'
+                details={false} />
+              <Tempview
+                tempNow={this.state.outsideNow}
+                handleNavClick={this.handleNavClick}
+                getLastUpdateTime={this.getLastUpdateTime}
+                locationDetails={this.locationDetails}
+                location='outside'
+                header='Ulkoilma'
+                details={false} />
+            </div>
           </div>
-        </nav>
-        <div className='main'>
-          <div id='day-selector'>
-            <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
-            <DatePicker
-              inline
-              className='datepicker'
-              selected={this.state.startDate}
-              onChange={this.handleDateChange}
-              dateFormat="DD.MM.YYYY"
-              locale="fi" />
+
+          <div id='text-div'>
+            <i>Näytä tarkemmat lämpötilatiedot klikkaamalla lämpötilaa.</i>
           </div>
-          <div id='line-chart'>
-            <LineChart
-              className='linechart'
-              width={this.state.chartwidth}
-              height={this.state.chartheight}
-              data={[ { name: 'Makuuhuone', color: 'steelblue', points: tempToShow}, { name: 'Olohuone', color: 'navy', points: livingroom_temps}, { name: 'Ulko', color: 'green', points: outside_temps} ]}
-              xMin="0"
-              xMax="24"
-              yMin={this.state.min_range}
-              yMax={this.state.max_range}
-              xLabel="Kellonaika"
-              yLabel="Lämpötila (&#8451;)"
-              pointRadius="1"
-              onPointHover={(point) => this.showTooltip(point)}
-              ticks="12"
-              showLegends="true" />
-          </div>
-          <div id='checkboxes'>
-            <input
-            name='livingroom'
-            type='checkbox'
-            checked={this.state.livingroom}
-            onChange={this.handleCheckboxChange} />
-            <label>Olohuone</label>
-            <input
-              name='bedroom'
-              type='checkbox'
-              checked={this.state.bedroom}
-              onChange={this.handleCheckboxChange} />
-            <label>Makuuhuone</label>
-            <input
-              name='outside'
-              type='checkbox'
-              checked={this.state.outside}
-              onChange={this.handleCheckboxChange} />
-            <label>Ulkolämpötila</label>
+
+        </div>
+      )
+    }
+
+    if (this.state.bedroom_details) {
+      return (
+        <div className="App">
+          <Navigation
+            handleNavClick={this.handleNavClick}
+            handleLoginClick={this.handleLoginClick}
+            user={this.state.user} />
+
+          <Tempview
+            tempNow={this.state.temperatureNow}
+            handleNavClick={this.handleNavClick}
+            getLastUpdateTime={this.getLastUpdateTime}
+            locationDetails={this.locationDetails}
+            location='bedroom'
+            header='Makuuhuone'
+            details={true} />
+
+          <Tempdetails
+            startDate={this.state.startDate}
+            handleDateChange={this.handleDateChange}
+            tempToShow={tempToShow}
+            showTooltip={this.showTooltip}
+            header='Makuuhuone'
+            min_range={this.calcRanges()['min_range']}
+            max_range={this.calcRanges()['max_range']} />
+        </div>
+      )
+    } else if (this.state.livingroom_details) {
+      return (
+        <div className="App">
+          <Navigation
+            handleNavClick={this.handleNavClick}
+            handleLoginClick={this.handleLoginClick}
+            user={this.state.user} />
+
+          <Tempview
+            tempNow={this.state.livingroomNow}
+            handleNavClick={this.handleNavClick}
+            getLastUpdateTime={this.getLastUpdateTime}
+            locationDetails={this.locationDetails}
+            location='livingroom'
+            header='Olohuone'
+            details={true} />
+
+          <Tempdetails
+            startDate={this.state.startDate}
+            handleDateChange={this.handleDateChange}
+            tempToShow={livingroom_temps}
+            showTooltip={this.showTooltip}
+            header='Olohuone'
+            min_range={this.calcRanges()['min_range']}
+            max_range={this.calcRanges()['max_range']} />
+        </div>
+      )
+    } else if (this.state.outside_details) {
+      return (
+        <div className="App">
+          <Navigation
+            handleNavClick={this.handleNavClick}
+            handleLoginClick={this.handleLoginClick}/>
+  
+          <Tempview
+            tempNow={this.state.outsideNow}
+            handleNavClick={this.handleNavClick}
+            getLastUpdateTime={this.getLastUpdateTime}
+            locationDetails={this.locationDetails}
+            location='outside'
+            header='Ulkoilma'
+            details={true} />
+
+          <Tempdetails
+            startDate={this.state.startDate}
+            handleDateChange={this.handleDateChange}
+            tempToShow={outside_temps}
+            showTooltip={this.showTooltip}
+            header='Ulkoilma'
+            min_range={this.calcRanges()['min_range']}
+            max_range={this.calcRanges()['max_range']} />
+        </div>
+      )
+    } else if (this.state.loginScreen) {
+
+      return (
+        <div className="App">
+          <Navigation
+            handleNavClick={this.handleNavClick}
+            handleLoginClick={this.handleLoginClick}
+            user={this.state.user} />
+
+          <div id='login-wrapper'>
+            <Loginscreen
+              login={this.login}
+              username={this.state.username}
+              password={this.state.password}
+              handleFieldChange={this.handleFieldChange}
+              />
           </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 }
 
