@@ -94,8 +94,26 @@ class App extends Component {
     })
   }
 
-  showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
-  
+  getTempOf = (date, location) => {
+    if (typeof this.state.data[0] === 'undefined') {
+      return []
+    } else if (this.state.data[0] === []) {
+      return []
+    }
+
+    const date_obj = this.state.data.find(e => e.date === date)
+    
+    if (typeof date_obj !== 'undefined') {
+      if (location === 'bedroom')
+        return date_obj.temperatures
+      else if (location === 'livingroom')
+        return date_obj.livingroom_temp
+      else if (location === 'outside')
+        return date_obj.outside_temp
+    } else
+      return []
+  }
+
   calcDayAverage = (location) => {
     const sum = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).reduce((a, b) => parseFloat(a) + parseFloat(b.y), 0)
     const length = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location).length
@@ -133,26 +151,7 @@ class App extends Component {
     else
       return maximum
   }
-  
-  getTempOf = (date, location) => {
-    if (typeof this.state.data[0] === 'undefined') {
-      return []
-    } else if (this.state.data[0] === []) {
-      return []
-    }
 
-    const date_obj = this.state.data.find(e => e.date === date)
-    
-    if (typeof date_obj !== 'undefined') {
-      if (location === 'bedroom')
-        return date_obj.temperatures
-      else if (location === 'livingroom')
-        return date_obj.livingroom_temp
-      else if (location === 'outside')
-        return date_obj.outside_temp
-    } else
-      return []
-  }
 
   getLastUpdateTime = (location) => {
     const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
@@ -284,6 +283,8 @@ class App extends Component {
     window.localStorage.removeItem('loggedUser')
     this.setState({ user: null })
   }
+
+  showTooltip = (point) => "<div className='tooltip-div'>" + point.y + "&#8451<br/>klo " + point.x + "</div>"
 
   render() {
     const tempToShow = this.state.bedroom_details ? this.getTempOf(this.state.startDate.format('DDMMYYYY'), 'bedroom') : []
