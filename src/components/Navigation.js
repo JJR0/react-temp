@@ -21,7 +21,7 @@ const Navigation = ({ handleNavClick, handleLoginClick, user }) => {
             <span className="nav-link" onClick={(e) => handleNavClick(e, 'outside')}>Ulkoilma</span>
           </li>
         </ul>
-        { user ?
+        {/* { user ?
           <div>
             <ul className="nav navbar-nav ml-auto justify-content-end">
               <li className='nav-item'>
@@ -41,7 +41,7 @@ const Navigation = ({ handleNavClick, handleLoginClick, user }) => {
                 <span className='nav-link' onClick={(e) => handleLoginClick(e)}>Kirjaudu</span>
               </li>
             </ul>
-          </div> }
+          </div> } */}
       </div>
     </nav>
   </div>

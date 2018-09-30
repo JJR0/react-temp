@@ -135,7 +135,11 @@ class App extends Component {
   }
   
   getTempOf = (date, location) => {
-    if (this.state.data[0] === [] || typeof this.state.data[0] === 'undefined') return []
+    if (typeof this.state.data[0] === 'undefined') {
+      return []
+    } else if (this.state.data[0] === []) {
+      return []
+    }
 
     const date_obj = this.state.data.find(e => e.date === date)
     
@@ -152,12 +156,15 @@ class App extends Component {
 
   getLastUpdateTime = (location) => {
     const array_temp = this.getTempOf(this.state.startDate.format('DDMMYYYY'), location)
+    //console.log("Arraytemp: ", array_temp)
 
-    if (array_temp.length === 0)
-      return
-    
+    if (array_temp.length === 0) return
+    // if (array_temp.length === 0) {
+    //   const yesterday = this.getTempOf(moment().subtract(1,'days').format('DDMMYYYY'), location)
+    //   return yesterday[yesterday.length - 1].x
+    // }
     const maximum = array_temp.reduce((max, temp) => temp.x > max ? temp.x : max, array_temp[0].x)
-    return maximum
+    return maximum // array_temp[array_temp.length - 1].x
   }
 
   handleNavClick = (event, location) => {
@@ -233,9 +240,7 @@ class App extends Component {
     // let livingroom_min = this.state.min_temp['livingroom']
     // let livingroom_max = this.state.max_temp['livingroom']
     let outside_min = this.state.min_temp['outside']
-    console.log(outside_min)
     let outside_max = this.state.max_temp['outside']
-    console.log(outside_max)
 
     if (this.state.outside_details && !this.state.bedroom_details && !this.state.livingroom_details && outside_min !== '-' && outside_max !== '-') {
       if ((outside_max - outside_min) + 2 < 6) {
