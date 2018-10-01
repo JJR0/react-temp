@@ -6,18 +6,28 @@ import '../../node_modules/react-datepicker/dist/react-datepicker.css'
 import '../index.css'
 
 const Tempdetails = ({ startDate, handleDateChange, tempToShow, showTooltip, header, min_range, max_range }) => {
+
+  const isMobile = window.innerWidth <= 500
+  console.log(isMobile)
+
   return (
     <div id='temp-details'>
 
-      <div id='day-selector'>
-        <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
-        <DatePicker
-          className='datepicker'
-          selected={startDate}
-          onChange={handleDateChange}
-          dateFormat="DD.MM.YYYY"
-          locale="fi" />
-      </div>
+      { !isMobile ? 
+        <div id='day-selector'>
+          <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
+          <DatePicker
+            className='datepicker'
+            selected={startDate}
+            onChange={handleDateChange}
+            dateFormat="DD.MM.YYYY"
+            locale="fi" />
+        </div>
+        :
+        <div>
+          <input type='date' value={startDate} onChange={handleDateChange} />
+        </div>
+      }
       <div id='line-chart'>
         <LineChart
           className='linechart'

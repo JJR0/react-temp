@@ -6,31 +6,31 @@ const Navigation = ({ handleNavClick, handleLoginClick, user }) => {
     <div>
       <nav className="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
       <span className="navbar-brand" onClick={(e) => handleNavClick(e, 'frontpage')}>Lämpötilaseuranta</span>
-      <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#nav-main" aria-controls="nav-main" aria-expanded="false" aria-label="Toggle navigation">
         <span className="navbar-toggler-icon"></span>
       </button>
-      <div className="collapse navbar-collapse" id="navbar">
+      <div className="collapse navbar-collapse" id="nav-main">
         <ul className="navbar-nav mr-auto">
           <li className="nav-item active">
-            <span className="nav-link" onClick={(e) => handleNavClick(e, 'livingroom')}>Olohuone</span>
+            <span className="nav-link" onClick={(e) => handleNavClick(e, 'livingroom')} data-toggle="collapse" data-target=".navbar-collapse.show">Olohuone</span>
           </li>
           <li className="nav-item active">
-            <span className="nav-link" onClick={(e) => handleNavClick(e, 'bedroom')}>Makuuhuone</span>
+            <span className="nav-link" onClick={(e) => handleNavClick(e, 'bedroom')} data-toggle="collapse" data-target=".navbar-collapse.show">Makuuhuone</span>
           </li>
           <li className="nav-item active">
-            <span className="nav-link" onClick={(e) => handleNavClick(e, 'outside')}>Ulkoilma</span>
+            <span className="nav-link" onClick={(e) => handleNavClick(e, 'outside')}  data-toggle="collapse" data-target=".navbar-collapse.show">Ulkoilma</span>
           </li>
         </ul>
-        { user ?
+        {/* { user ?
           <div>
             <ul className="nav navbar-nav ml-auto justify-content-end">
               <li className='nav-item'>
-                <span className='nav-link'>Asetukset</span>
+                <span className='nav-link' data-toggle="collapse" data-target=".navbar-collapse.show">Asetukset</span>
               </li>
             </ul>
             <ul className="nav navbar-nav ml-auto justify-content-end">
               <li className='nav-item'>
-                <span className='nav-link'>Kirjaudu ulos</span>
+                <span className='nav-link' data-toggle="collapse" data-target=".navbar-collapse.show">Kirjaudu ulos</span>
               </li>
             </ul>
           </div>
@@ -38,10 +38,10 @@ const Navigation = ({ handleNavClick, handleLoginClick, user }) => {
           <div>
             <ul className="nav navbar-nav ml-auto justify-content-end">
               <li className='nav-item'>
-                <span className='nav-link' onClick={(e) => handleLoginClick(e)}>Kirjaudu</span>
+                <span className='nav-link' onClick={(e) => handleLoginClick(e)} data-toggle="collapse" data-target=".navbar-collapse.show">Kirjaudu</span>
               </li>
             </ul>
-          </div> }
+          </div> } */}
       </div>
     </nav>
   </div>
