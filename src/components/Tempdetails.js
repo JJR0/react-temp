@@ -24,7 +24,8 @@ const Tempdetails = ({ startDate, handleDateChange, tempToShow, showTooltip, hea
             locale="fi" />
         </div>
         :
-        <div>
+        <div id='day-selector'>
+          <div id='date-header'>Minkä päivän lämpötilatiedot haluat nähdä?</div>
           <input type='date' value={startDate} onChange={handleDateChange} />
         </div>
       }
